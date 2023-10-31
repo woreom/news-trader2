@@ -1,0 +1,7 @@
+investpy==1.0.8
+MetaTrader5==5.0.45
+MetaTrader5==5.0.45
+numpy==1.25.2
+pandas==2.0.3
+pytz==2022.7
+Requests==2.31.0
