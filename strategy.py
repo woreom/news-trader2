@@ -90,7 +90,7 @@ def Open_Position(trade_info):
     time_info = trade_info[position_index]['PendingTime']
     sleep(time_info)
 
-    symbol=trade_info['Currency']
+    symbol=trade_info[position_index]['Currency']
     digit = mt5.symbol_info(symbol).digits
     price_news_time = trade_info[position_index]['price_news_time']
     initialize= ["51834380", "4wsirwes", "Alpari-MT5-Demo"]

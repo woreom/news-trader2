@@ -4257,3 +4257,10 @@ AttributeError: 'NoneType' object has no attribute 'ask'
 [31/10/2023 03:24:36]News Time? No
 [31/10/2023 03:16:03]Starting Bot ...
 [31/10/2023 03:16:06]country=Japan, news=Industrial Production (MoM), symbol= ['XAUUSD'], timeframe=['2'] with [0.9466666666666668]
+[31/10/2023 03:15:46]Starting Bot ...
+[31/10/2023 03:15:57]country=Japan, news=Industrial Production (MoM), symbol= ['XAUUSD'], timeframe=['2'] with [0.9466666666666668]
+[31/10/2023 03:15:57][[{'News': 'Industrial Production (MoM)', 'Action': 'Buy', 'Currency': 'XAUUSD', 'TimeFrame': 2, 'price_news_time': 1997.8, 'TakeProfit': 1997.8, 'StepLoss': 1992.564, 'EntryTime': '31/10/2023 04:23:16', 'PendingTime': 3450, 'RR': 1.607213266844468, 'WinRate': 0.9466666666666668, 'PositionSize': 0.12, 'Risk': 100}, {'News': 'Industrial Production (MoM)', 'Action': 'Sell', 'Currency': 'XAUUSD', 'TakeProfit': 1997.65, 'StepLoss': 2002.722, 'TimeFrame': 2, 'price_news_time': 1997.65, 'EntryTime': '31/10/2023 04:04:10', 'PendingTime': 2304, 'RR': 1.5772163423238728, 'WinRate': 0.9466666666666668, 'PositionSize': 0.11, 'Risk': 100}]]
+[31/10/2023 04:51:36]Starting Bot ...
+[31/10/2023 04:51:38]News Time? No
+[31/10/2023 14:41:50]News Time? No
+[31/10/2023 14:42:20]News Time? No
