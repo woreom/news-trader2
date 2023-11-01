@@ -88,7 +88,7 @@ def Open_Position(trade_info):
     position_index = np.argmin((trade_info[0]['PendingTime'], trade_info[1]['PendingTime']))
     print(position_index)
     time_info = trade_info[position_index]['PendingTime']
-    #sleep(time_info)
+    sleep(time_info)
 
     symbol=trade_info[position_index]['Currency']
     digit = mt5.symbol_info(symbol).digits
@@ -104,7 +104,7 @@ def Open_Position(trade_info):
         if trade_info[position_index]['Action'] == 'Buy':
             action = 'Buy'
     if action == None:
-        #sleep(trade_info[1-position_index]["PendingTime"] - trade_info[position_index]["PendingTime"]) 
+        sleep(trade_info[1-position_index]["PendingTime"] - trade_info[position_index]["PendingTime"]) 
         df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
         if (price_news_time > df.iloc[-1]["Open"]) and (price_news_time > df.iloc[-1]["High"]) and (price_news_time > df.iloc[-1]["Low"]) and(price_news_time > df.iloc[-1]["Close"]):
             action = 'Sell'
@@ -119,9 +119,10 @@ def Open_Position(trade_info):
         price = mt5.symbol_info_tick(symbol).bid
     else:
         print('position failed')
-        action = 'Buy'
-        position_info = trade_info[0]
-        price = mt5.symbol_info_tick(symbol).bid
+        return
+        # action = 'Buy'
+        # position_info = trade_info[0]
+        # price = mt5.symbol_info_tick(symbol).bid
     print(action)    
     print(position_info)
     order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL}
