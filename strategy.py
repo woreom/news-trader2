@@ -88,7 +88,7 @@ def Open_Position(trade_info):
     position_index = np.argmin((trade_info[0]['PendingTime'], trade_info[1]['PendingTime']))
     print(position_index)
     time_info = trade_info[position_index]['PendingTime']
-    sleep(time_info)
+    #sleep(time_info)
 
     symbol=trade_info[position_index]['Currency']
     digit = mt5.symbol_info(symbol).digits
@@ -98,32 +98,36 @@ def Open_Position(trade_info):
 
     action = None
     if (price_news_time > df.iloc[-1]["Open"]) and (price_news_time > df.iloc[-1]["High"]) and (price_news_time > df.iloc[-1]["Low"]) and(price_news_time > df.iloc[-1]["Close"]):
-        if trade_info[position_index]['Action'] == 'sell':
-            action = 'sell'
+        if trade_info[position_index]['Action'] == 'Sell':
+            action = 'Sell'
     elif (price_news_time < df.iloc[-1]["Open"]) and (price_news_time < df.iloc[-1]["High"]) and (price_news_time < df.iloc[-1]["Low"]) and(price_news_time < df.iloc[-1]["Close"]):
-        if trade_info[position_index]['Action'] == 'buy':
-            action = 'buy'
+        if trade_info[position_index]['Action'] == 'Buy':
+            action = 'Buy'
     if action == None:
-        sleep(trade_info[1-position_index]["PendingTime"] - trade_info[position_index]["PendingTime"]) 
+        #sleep(trade_info[1-position_index]["PendingTime"] - trade_info[position_index]["PendingTime"]) 
         df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
         if (price_news_time > df.iloc[-1]["Open"]) and (price_news_time > df.iloc[-1]["High"]) and (price_news_time > df.iloc[-1]["Low"]) and(price_news_time > df.iloc[-1]["Close"]):
-            action = 'sell'
+            action = 'Sell'
         elif (price_news_time < df.iloc[-1]["Open"]) and (price_news_time < df.iloc[-1]["High"]) and (price_news_time < df.iloc[-1]["Low"]) and(price_news_time < df.iloc[-1]["Close"]):
-            action = 'buy'
+            action = 'Buy'
 
-    if action == 'sell':
-        trade_info = trade_info[1]
+    if action == 'Sell':
+        position_info = trade_info[1]
         price = mt5.symbol_info_tick(symbol).ask
-    elif action == 'buy':
-        trade_info = trade_info[0]
+    elif action == 'Buy':
+        position_info = trade_info[0]
         price = mt5.symbol_info_tick(symbol).bid
     else:
         print('position failed')
-
+        action = 'Buy'
+        position_info = trade_info[0]
+        price = mt5.symbol_info_tick(symbol).bid
+    print(action)    
+    print(position_info)
     order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL}
-    tp = np.round(trade_info['TakeProfit'], digit)
-    sl = np.round(trade_info['StepLoss'], digit)
-    lot = np.double(trade_info['PositionSize'])        
+    tp = np.round(position_info['TakeProfit'], digit)
+    sl = np.round(position_info['StepLoss'], digit)
+    lot = np.double(position_info['PositionSize'])        
     request = {
     "action": mt5.TRADE_ACTION_DEAL,
     "symbol": symbol,
@@ -132,8 +136,8 @@ def Open_Position(trade_info):
     "price": price,
     "sl": sl,  
     "tp": tp,
-    "type_filling":mt5.ORDER_FILLING_IOC,
-    "comment": f"{trade_info['News'][:3]},{trade_info['TimeFrame']},{round(trade_info['WinRate']*100, ndigits=2)}",
+    #"type_filling":mt5.ORDER_FILLING_RETURN,
+    "comment": f"{position_info['News'][:3]},{position_info['TimeFrame']},{round(position_info['WinRate']*100, ndigits=2)}",
     }
     
     # Send the pending order to the trading server
@@ -143,6 +147,7 @@ def Open_Position(trade_info):
     trade= dummy()
     while trade.order == 0 and counter<=40:
         trade = mt5.order_send(request)
+        print(trade)
         #print trade retcode
         # if trade.retcode != mt5.TRADE_RETCODE_DONE:
         #     print("2. order_send failed, retcode={}".format(trade.retcode))
@@ -193,9 +198,10 @@ def Control_Position(initialize, trade_info):
     mt5.initialize()
     mt5.login(login=initialize[0],password=initialize[1],server=initialize[2])
     
-    Open_Position(trade_info)
-    # t1 = threading.Thread(target=Open_Position, args=[trade_info])
-    # t1.start()
+    #Open_Position(trade_info)
+    #print(trade_info)
+    t1 = threading.Thread(target=Open_Position, args=[trade_info])
+    t1.start()
     #t1 = threading.Thread(target=Close_Position, args=(trade.order, trade_info['Currency'], max_open_time))
     #t1.start()
     # return trade.order

@@ -214,12 +214,7 @@ if __name__ == "__main__":
 
     # # print(positions[0]['TimeFrame']*60*60)
     # # print(positions[1]['TimeFrame']*60*60)
-    # positions[0]['order'] = Control_Position(initialize,  positions[0],
-    #                                         max_pending_time=160,
-    #                                         max_open_time=300)
-    # positions[1]['order'] = Control_Position(initialize,  positions[1], 
-    #                                         max_pending_time=160,
-    #                                         max_open_time=300)
+    # Control_Position(initialize,  positions)
     ############## Test Multiplier Values ##############
     # import MetaTrader5 as mt5
     # from news_trading import get_tick_size
@@ -243,7 +238,7 @@ if __name__ == "__main__":
     run_bot(all_countries=['United States', 'United Kingdom', 'Euro Zone',
                            'Germany', 'Switzerland', 'Canada', 
                            'Australia', 'Japan', 'New Zealand', 'China'],
-                           symbol=None, timeframe=None, risk=100, num_positions=1)
+                           symbol=None, timeframe=None, risk=100, num_positions=3)
 
     
 

@@ -210,7 +210,6 @@ def trade_i_positions_on_news(initialize, news, country, risk, time_open, num_po
         positions.append(strategy(df= calc_df, symbol= symbol, news=news,
                             open_= open_, time_open=time_open,
                             multiplier=get_tick_size(symbol), timeframe=time_frame[timeframe], risk=risk))
-    print(positions)    
     return positions
 
 
