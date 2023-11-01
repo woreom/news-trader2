@@ -44,7 +44,7 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
             #     df_position = pd.concat([df_position, pd.DataFrame(position)], ignore_index=True)
             #     df_position.to_csv(file_path, index=False)
             for position in positions:
-                position['order'] = Control_Position(initialize,  position)
+                Control_Position(initialize,  position)
            
                 
         # if it's news is published to 4hour return true
