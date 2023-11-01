@@ -1,0 +1,7 @@
+**/__pycache__
+*.html
+*.deb
+*.xlsx
+**/.vscode
+log.txt
+/static
