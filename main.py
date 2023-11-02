@@ -4,6 +4,8 @@ import requests
 import traceback
 import pandas as pd
 from datetime import datetime, timedelta
+import threading
+
 
 from get_data import get_today_calendar, create_positions_file, get_price
 from strategy import Control_Position
@@ -44,7 +46,8 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
             #     df_position = pd.concat([df_position, pd.DataFrame(position)], ignore_index=True)
             #     df_position.to_csv(file_path, index=False)
             for position in positions:
-                Control_Position(initialize,  position)
+                t1 = threading.Thread(target=Control_Position, args=(initialize,  position))
+                t1.start()
            
                 
         # if it's news is published to 4hour return true
