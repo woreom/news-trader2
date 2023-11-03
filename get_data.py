@@ -42,8 +42,11 @@ def get_price(initialize, symbol):
     # Initialization
     mt5.initialize()
     mt5.login(login=initialize[0],password=initialize[1],server=initialize[2])
+    for _ in range(3):
+        ask = mt5.symbol_info_tick(symbol).ask
+        bid = mt5.symbol_info_tick(symbol).bid
 
-    return {"buy": mt5.symbol_info_tick(symbol).ask, "sell": mt5.symbol_info_tick(symbol).bid}
+    return {"buy": ask, "sell": bid}
 
 
 ## Download historical market data from MetaTrader5

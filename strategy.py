@@ -94,7 +94,8 @@ def Open_Position(trade_info):
     digit = mt5.symbol_info(symbol).digits
     price_news_time = trade_info[position_index]['price_news_time']
     initialize= ["51834380", "4wsirwes", "Alpari-MT5-Demo"]
-    df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
+    for _ in range(3):
+        df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
 
     action = None
     if (price_news_time > df.iloc[-1]["Open"]) and (price_news_time > df.iloc[-1]["High"]) and (price_news_time > df.iloc[-1]["Low"]) and(price_news_time > df.iloc[-1]["Close"]):
