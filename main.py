@@ -85,7 +85,7 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
             raise
     except IndexError as e:
         if str(e) == "single positional indexer is out-of-bounds":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return None, None
         else:
             raise

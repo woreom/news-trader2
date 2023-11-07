@@ -98,29 +98,34 @@ def Open_Position(trade_info):
         df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
 
     action = None
-    if (price_news_time > df.iloc[-1]["Open"]) and (price_news_time > df.iloc[-1]["High"]) and (price_news_time > df.iloc[-1]["Low"]) and(price_news_time > df.iloc[-1]["Close"]):
+    if (price_news_time < df.iloc[-1]["Low"]):
         if trade_info[position_index]['Action'] == 'Sell':
             action = 'Sell'
-    elif (price_news_time < df.iloc[-1]["Open"]) and (price_news_time < df.iloc[-1]["High"]) and (price_news_time < df.iloc[-1]["Low"]) and(price_news_time < df.iloc[-1]["Close"]):
+    elif (price_news_time > df.iloc[-1]["High"]):
         if trade_info[position_index]['Action'] == 'Buy':
             action = 'Buy'
     if action == None:
         sleep(trade_info[1-position_index]["PendingTime"] - trade_info[position_index]["PendingTime"]) 
-        df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
-        if (price_news_time > df.iloc[-1]["Open"]) and (price_news_time > df.iloc[-1]["High"]) and (price_news_time > df.iloc[-1]["Low"]) and(price_news_time > df.iloc[-1]["Close"]):
+        for _ in range(3):
+            df =get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
+        if (price_news_time < df.iloc[-1]["Low"]):
             action = 'Sell'
-        elif (price_news_time < df.iloc[-1]["Open"]) and (price_news_time < df.iloc[-1]["High"]) and (price_news_time < df.iloc[-1]["Low"]) and(price_news_time < df.iloc[-1]["Close"]):
+        elif (price_news_time > df.iloc[-1]["High"]):
             action = 'Buy'
 
     if action == 'Sell':
         position_info = trade_info[1]
         price = mt5.symbol_info_tick(symbol).ask
+
     elif action == 'Buy':
         position_info = trade_info[0]
         price = mt5.symbol_info_tick(symbol).bid
+      
     else:
         print('position failed')
         return
+    log(f'position info: {position_info}')   
+    log(f'position info: {price}')  
         # action = 'Buy'
         # position_info = trade_info[0]
         # price = mt5.symbol_info_tick(symbol).bid
