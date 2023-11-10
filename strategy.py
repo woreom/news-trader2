@@ -152,6 +152,10 @@ def Open_Position(trade_info):
     class dummy():
         order=0
     trade= dummy()
+
+    if np.abs((request["tp"] - request["price"]) / (request['sl'] - request['price'])) <=0.2:
+        return
+    
     while trade.order == 0 and counter<=40:
         trade = mt5.order_send(request)
         print(trade)
@@ -162,6 +166,21 @@ def Open_Position(trade_info):
         counter+=1
     log(f'opend position: {trade.order}')
     # Return information about the trade order
+    sleep(trade_info[[position_index]]['TimeFrame']*60*60 - trade_info[position_index]['PendingTime'])
+    risk_free_request = {
+    "action": mt5.TRADE_ACTION_SLTP,
+    "symbol": symbol,    
+    "sl": price,  
+    "tp": tp,
+    "position": trade.order, 
+    #"type_filling":mt5.ORDER_FILLING_RETURN,
+    # "comment": f"{position_info['News'][:3]},{position_info['TimeFrame']},{round(position_info['WinRate']*100, ndigits=2)}",
+    }
+    risk_free_trade =[0]
+    while risk_free_trade[0] != 10009:
+        trade = mt5.order_send(risk_free_request)
+        print(trade)
+
     return trade, request
 
 
