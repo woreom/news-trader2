@@ -42,9 +42,15 @@ def get_price(initialize, symbol):
     # Initialization
     mt5.initialize()
     mt5.login(login=initialize[0],password=initialize[1],server=initialize[2])
+    
     for _ in range(3):
-        ask = mt5.symbol_info_tick(symbol).ask
-        bid = mt5.symbol_info_tick(symbol).bid
+        
+        # ask = mt5.symbol_info_tick(symbol).ask
+        # bid = mt5.symbol_info_tick(symbol).bid
+
+        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
+        price = df.iloc[-1]['Open']
+        ask = price, bid = price
 
     return {"buy": ask, "sell": bid}
 
