@@ -8,7 +8,7 @@ import threading
 
 
 from get_data import get_today_calendar, create_positions_file, get_price
-from strategy import Control_Position
+from strategy import Control_Positions
 
 import MetaTrader5 as mt5
 
@@ -46,7 +46,7 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
             #     df_position = pd.concat([df_position, pd.DataFrame(position)], ignore_index=True)
             #     df_position.to_csv(file_path, index=False)
             for position in positions:
-                t1 = threading.Thread(target=Control_Position, args=(initialize,  position))
+                t1 = threading.Thread(target=Control_Positions, args=(initialize,  position))
                 t1.start()
            
                 

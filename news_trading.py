@@ -120,7 +120,8 @@ def get_extra_points(df: pd.DataFrame, symbol: str, news: str, timeframe: int,
                                "TakeProfit": price_calc(entry_point, function_over_price(-1*sign*profit/2), multiplier),
                                "StepLoss": price_calc(open_[position], function_over_price(sign*profit/2), multiplier),
                                "EntryTime": (time_open + timedelta(minutes=time_mean)),
-                               "WinRate": interest_row["Win Rate"].iloc[0]}
+                               "WinRate": interest_row["Win Rate"].iloc[0],
+                               "Space": interest_row["Space"].iloc[0]}
      
     return positions
 
@@ -157,7 +158,7 @@ def strategy(df: pd.DataFrame, symbol: str, news: str, open_: float,
             "PendingTime": int((positions['buy']["EntryTime"] - time_open).total_seconds()),
             'RR': np.abs((positions['buy']["TakeProfit"] - positions['buy']["EntryPoint"]) / (positions['buy']["StepLoss"] - positions['buy']["EntryPoint"])),
             "WinRate": positions['buy']["WinRate"], 'PositionSize': calc_position_size(symbol, positions['buy']["EntryPoint"], positions['buy']["StepLoss"], risk),
-            'Risk':risk},
+            'Risk':risk, 'Space': positions['buy']["Space"]},
             {"News": positions['sell']["News"], "Action": "Sell", "Currency": symbol,
             "TakeProfit": positions['sell']["price_news_time"], "StepLoss": positions['sell']["EntryPoint"], 
             "TimeFrame": timeframe, "price_news_time": positions['sell']["price_news_time"],
@@ -165,7 +166,7 @@ def strategy(df: pd.DataFrame, symbol: str, news: str, open_: float,
             "PendingTime": int((positions['sell']["EntryTime"] - time_open).total_seconds()),
             'RR': np.abs((positions['sell']["TakeProfit"] - positions['sell']["EntryPoint"]) / (positions['sell']["StepLoss"] - positions['sell']["EntryPoint"])),
             "WinRate": positions['sell']["WinRate"], 'PositionSize': calc_position_size(symbol, positions['sell']["EntryPoint"], positions['sell']["StepLoss"], risk),
-            'Risk':risk}
+            'Risk':risk, 'Space': positions['sell']["Space"]},
             ]
 
     return info
