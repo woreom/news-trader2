@@ -1,8 +1,8 @@
 ## Import Libraries
 import os
+from typing import List
 import glob
 import pytz
-from typing import List
 from datetime import datetime, timedelta
 from time import sleep
 
@@ -48,11 +48,65 @@ def get_price(initialize, symbol):
         # ask = mt5.symbol_info_tick(symbol).ask
         # bid = mt5.symbol_info_tick(symbol).bid
 
-        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
+        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='5m')
         price = df.iloc[-1]['Open']
-        ask = price, bid = price
+        ask = price
+        bid = price
 
     return {"buy": ask, "sell": bid}
+
+def get_candle(initialize: List, symbol: str, timeframe: str) -> pd.DataFrame:
+    
+    for _ in range(3):
+        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame=timeframe)
+        last_candle = df.iloc[-1]
+    return last_candle
+
+def get_ask(initialize: List, symbol: str) -> float:
+    # Initialization
+    mt5.initialize()
+    mt5.login(login=initialize[0],password=initialize[1],server=initialize[2])
+    
+    for _ in range(3):
+        ask = mt5.symbol_info_tick(symbol).ask
+
+    return ask
+
+def get_bid(initialize: List, symbol: str) -> float:
+    # Initialization
+    mt5.initialize()
+    mt5.login(login=initialize[0],password=initialize[1],server=initialize[2])
+    
+    for _ in range(3):
+        bid = mt5.symbol_info_tick(symbol).bid
+
+    return bid
+
+def get_open_positions(initialize: List) -> pd.DataFrame:
+    # Initialization
+    mt5.initialize()
+    mt5.login(login=initialize[0],password=initialize[1],server=initialize[2])
+
+    trade_positions = mt5.positions_get()
+    if trade_positions is None:
+        return pd.DataFrame()
+    else:
+        # Get Open Positions from MT5
+        open_positions = pd.DataFrame(list(trade_positions),columns=trade_positions[0]._asdict().keys())
+        # Replace time from seconds to datetime format
+        open_positions['time'] = pd.to_datetime(open_positions['time'], unit='s')
+        open_positions['time_update'] = pd.to_datetime(open_positions['time_update'], unit='s')
+        # Drop time in miliseconds
+        open_positions.drop(['time_msc', 'time_update_msc'], axis=1, inplace=True)
+        # Replace 1 with Sell
+        open_positions.loc[open_positions['type']==1, 'type'] = 'Sell'
+        # Replace 0 with Buy
+        open_positions.loc[open_positions['type']==0, 'type'] = 'Buy'
+        # Replace type with action
+        open_positions["action"] = open_positions["type"].copy()
+        open_positions.drop(['type'], axis=1, inplace=True)
+        
+        return open_positions
 
 
 ## Download historical market data from MetaTrader5
