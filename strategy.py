@@ -44,8 +44,7 @@ def set_action(initialize: List, positions: List, position_index: int, symbol: s
 
     # Find if the second position is a buy, sell or cancel  
     if action == "Cancel":
-        # sleep(positions[1-position_index]["PendingTime"] - positions[position_index]["PendingTime"])
-        sleep(5)
+        sleep(positions[1-position_index]["PendingTime"] - positions[position_index]["PendingTime"])
         # update current candle
         candle = get_candle(initialize=initialize, symbol=symbol, timeframe='1m')
         if (price_news_time < candle["Low"]):
@@ -65,8 +64,7 @@ def set_action(initialize: List, positions: List, position_index: int, symbol: s
     return action
 
 def count_num_hits(price, df):
-
-    pass
+    return df.gt(price).cumsum().where(df.le(price)).nunique() + df.le(price).cumsum().where(df.gt(price)).nunique() - 1
 
 def PositionSize(symbol, entry, sl, risk):
     """
@@ -301,8 +299,7 @@ def Control_Positions(initialize, positions):
     time_info = positions[position_index]['PendingTime']
     # get the price in time of news
     price_news_time = positions[position_index]['price_news_time']
-    # sleep(time_info)
-    sleep(5)
+    sleep(time_info)
 
     # Wait until action is set to 'Buy', 'Sell' or 'Cancel'
     action = set_action(initialize, positions, position_index, symbol, price_news_time)
@@ -336,7 +333,7 @@ def Control_Positions(initialize, positions):
         slept_time = (positions[position_index]['PendingTime'] if position_index == position_order[action] else positions[0]['PendingTime'] + positions[1]['PendingTime'])
         num_candles = int(np.round(slept_time/60, decimals = 0))+10
         df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
-        count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]]) - 1
+        count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]])
         print(count)
         if position_info["Space"] < count:
             log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count}")
@@ -353,8 +350,7 @@ def Control_Positions(initialize, positions):
     log(f'opend position: {trade.order}' if flag else f'failed to open position: {position_info}')
 
     # wait to risk-free the position (close it)
-    # sleep(position_info['TimeFrame']*60*60 - slept_time)
-    sleep(5)
+    sleep(position_info['TimeFrame']*60*60 - slept_time)
     
     # Find our profit or loss
     open_positions = get_open_positions(initialize)
