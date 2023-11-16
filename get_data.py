@@ -91,20 +91,25 @@ def get_open_positions(initialize: List) -> pd.DataFrame:
     if trade_positions is None:
         return pd.DataFrame()
     else:
-        # Get Open Positions from MT5
-        open_positions = pd.DataFrame(list(trade_positions),columns=trade_positions[0]._asdict().keys())
-        # Replace time from seconds to datetime format
-        open_positions['time'] = pd.to_datetime(open_positions['time'], unit='s')
-        open_positions['time_update'] = pd.to_datetime(open_positions['time_update'], unit='s')
-        # Drop time in miliseconds
-        open_positions.drop(['time_msc', 'time_update_msc'], axis=1, inplace=True)
-        # Replace 1 with Sell
-        open_positions.loc[open_positions['type']==1, 'type'] = 'Sell'
-        # Replace 0 with Buy
-        open_positions.loc[open_positions['type']==0, 'type'] = 'Buy'
-        # Replace type with action
-        open_positions["action"] = open_positions["type"].copy()
-        open_positions.drop(['type'], axis=1, inplace=True)
+        try:
+            # Get Open Positions from MT5
+            open_positions = pd.DataFrame(list(trade_positions),columns=trade_positions[0]._asdict().keys())
+            # Replace time from seconds to datetime format
+            open_positions['time'] = pd.to_datetime(open_positions['time'], unit='s')
+            open_positions['time_update'] = pd.to_datetime(open_positions['time_update'], unit='s')
+            # Drop time in miliseconds
+            open_positions.drop(['time_msc', 'time_update_msc'], axis=1, inplace=True)
+            # Replace 1 with Sell
+            open_positions.loc[open_positions['type']==1, 'type'] = 'Sell'
+            # Replace 0 with Buy
+            open_positions.loc[open_positions['type']==0, 'type'] = 'Buy'
+            # Replace type with action
+            open_positions["action"] = open_positions["type"].copy()
+            open_positions.drop(['type'], axis=1, inplace=True)
+        except IndexError as e:
+            if str(e) == "tuple index out of range":
+                return pd.DataFrame({}, columns=['symbol','action'])
+
         
         return open_positions
 
