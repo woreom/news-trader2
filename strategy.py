@@ -19,7 +19,7 @@ from get_data import get_candle, get_bid, get_ask, get_open_positions, get_data_
 def open_position(request: Dict):
  
     trade = mt5.order_send(request)
-    success = trade.order == 0
+    success = trade.order != 0
     return success, trade
 
 @try_on_internet(counter_limit=40)
