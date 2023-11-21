@@ -38,20 +38,24 @@ def set_action(initialize: List, positions: List, position_index: int, symbol: s
     if (price_news_time < candle["Low"]):
         if positions[position_index]['Action'] == 'Sell':
             action = 'Sell'
+
     elif (price_news_time > candle["High"]):
         if positions[position_index]['Action'] == 'Buy':
             action = 'Buy'
 
+    log(f'action: {action} price_news_time: {price_news_time} candle_low: {candle["Low"]} candle_high: {candle["High"]}')
+
     # Find if the second position is a buy, sell or cancel  
     if action == "Cancel":
         sleep(positions[1-position_index]["PendingTime"] - positions[position_index]["PendingTime"])
+        log(f'The second sleep duraction for {positions[position_index]["Currency"]} was passed ({positions[1-position_index]["PendingTime"] - positions[position_index]["PendingTime"]} seconds) news:{positions[position_index]["News"]}')
         # update current candle
         candle = get_candle(initialize=initialize, symbol=symbol, timeframe='1m')
         if (price_news_time < candle["Low"]):
             action = 'Sell'
         elif (price_news_time > candle["High"]):
             action = 'Buy'
-    
+        log(f'action: {action} low: {candle["Low"]} high: {candle["High"]}')
     # Add Check if action contradicts our open positions
     open_positions = get_open_positions(initialize)
     num_buy = len(open_positions.loc[(open_positions['symbol'] == symbol) & (open_positions["action"] == "Buy")])
@@ -59,6 +63,7 @@ def set_action(initialize: List, positions: List, position_index: int, symbol: s
     
 
     if (action == "Buy" and num_sell > 0) or (action == "Sell" and num_buy > 0):
+        log(f'action: {action} num_sell: {num_sell} num_buy: {num_buy}')
         action = "Cancel"
 
     return action
@@ -300,13 +305,14 @@ def Control_Positions(initialize, positions):
     # get the price in time of news
     price_news_time = positions[position_index]['price_news_time']
     sleep(time_info)
-
+    log(f'The first sleep duration for {positions[position_index]["Currency"]} was passed ({time_info} seconds) news:{positions[position_index]["News"]}')
     # Wait until action is set to 'Buy', 'Sell' or 'Cancel'
     action = set_action(initialize, positions, position_index, symbol, price_news_time)
     
     # Set our trading info
     position_info = positions[1] if action == 'Sell' else positions[0]
     price = get_ask(initialize, symbol) if action == 'Sell' else get_bid(initialize, symbol)
+    log(f'price: {price}')
     
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
@@ -327,6 +333,7 @@ def Control_Positions(initialize, positions):
     # check if R/R is less than 0.2
     if np.abs((request["tp"] - request["price"]) / (request['sl'] - request['price'])) <=0.2:
         action = 'Cancel'
+        log(f'action canceled because R/R is less than 0.2')
 
     # Check if price_news_time has been hit more than space
     if action != 'Cancel':
@@ -336,7 +343,7 @@ def Control_Positions(initialize, positions):
         count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]])
         print(count)
         if position_info["Space"] < count:
-            log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count}")
+            log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count} slept_time:{slept_time} num_candles:{num_candles}")
             action = 'Cancel'
 
     # Check if action is 'Cancel'
