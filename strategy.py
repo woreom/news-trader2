@@ -338,8 +338,8 @@ def Control_Positions(initialize, positions):
     # Check if price_news_time has been hit more than space
     if action != 'Cancel':
         slept_time = (positions[position_index]['PendingTime'] if position_index == position_order[action] else positions[0]['PendingTime'] + positions[1]['PendingTime'])
-        num_candles = int(np.round(slept_time/60, decimals = 0))+10
-        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
+        num_candles = int(np.round(slept_time/60, decimals = 0)/5)
+        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='5m')
         count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]])
         print(count)
         if position_info["Space"] < count:
@@ -375,6 +375,6 @@ def Control_Positions(initialize, positions):
     
     # Send modification to MT5
     success, trade = modify_position(request= risk_free_request)
-    
+    log(f'{success}  {trade}')
     return trade, request
     
