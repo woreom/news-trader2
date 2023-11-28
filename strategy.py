@@ -358,20 +358,34 @@ def Control_Positions(initialize, positions):
 
     # wait to risk-free the position (close it)
     sleep(position_info['TimeFrame']*60*60 - slept_time)
-    
+
     # Find our profit or loss
     open_positions = get_open_positions(initialize)
     is_profit = open_positions.loc[open_positions['ticket'] == trade.order]['profit'].iloc[0] > 0
     ## If trader.order does not match any tickets IndexError: single positional indexer is out-of-bounds
-
+    #get action of the position
+    action_postion = open_positions.loc[open_positions['ticket'] == trade.order]['action'].iloc[0]
+    #get spread
+    symbol_postion = open_positions.loc[open_positions['ticket'] == trade.order]['symbol'].iloc[0]
+    spread = abs(get_ask(initialize, symbol_postion) - get_bid(initialize, symbol_postion))
     # Modify position to be risk-free
-    risk_free_request = {
+    if action_postion == 'Buy':
+        risk_free_request = {
         "action": mt5.TRADE_ACTION_SLTP,
         "symbol": symbol,    
-        "sl": price if is_profit else sl,  
-        "tp": tp if is_profit else price,
+        "sl": price+spread if is_profit else sl,  
+        "tp": tp if is_profit else price-spread,
         "position": trade.order, 
         }
+
+    if action_postion == 'Sell':
+        risk_free_request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": symbol,    
+            "sl": price-spread if is_profit else sl,  
+            "tp": tp if is_profit else price+spread,
+            "position": trade.order, 
+            }
     
     # Send modification to MT5
     success, trade = modify_position(request= risk_free_request)
