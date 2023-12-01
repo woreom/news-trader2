@@ -367,9 +367,47 @@ def Control_Positions(initialize, positions):
     action_postion = open_positions.loc[open_positions['ticket'] == trade.order]['action'].iloc[0]
     #get spread
     symbol_postion = open_positions.loc[open_positions['ticket'] == trade.order]['symbol'].iloc[0]
-    spread = abs(get_ask(initialize, symbol_postion) - get_bid(initialize, symbol_postion))
+
+
+    __MULTIPLIER__VALUE__ = {
+    'AUDJPY': 0.001, 'AUDUSD': 1e-05, 'AUDCAD': 1e-05, 'AUDCHF': 1e-05, 'CADCHF': 1e-05,
+    'CADJPY': 0.001, 'CHFJPY': 0.001, 'GBPCHF': 1e-05, 'EURAUD': 1e-05, 'EURCAD': 1e-05,
+    'EURGBP': 1e-05, 'EURJPY': 0.001, 'EURNZD': 1e-05, 'EURUSD': 1e-05, 'EURCHF': 1e-05,
+    'GBPAUD': 1e-05, 'GBPJPY': 0.001, 'GBPUSD': 1e-05, 'GBPCAD': 1e-05, 'GBPNZD': 1e-05,
+    'NZDCAD': 1e-05, 'NZDCHF': 1e-05, 'NZDJPY': 0.001, 'NZDUSD': 1e-05, 'USDCAD': 1e-05,
+    'USDCHF': 1e-05, 'USDJPY': 0.001, 'XAUUSD': 0.01
+    }
+
+    ask = get_ask(initialize, symbol_postion)
+    bid = get_bid(initialize, symbol_postion)
+    spread = abs(ask - bid)
+    multiplier = __MULTIPLIER__VALUE__[symbol_postion]
     # Modify position to be risk-free
-    if action_postion == 'Buy':
+    if (bid < price+spread < ask) or (bid < price-spread < ask):
+        correct_price_bid = bid - 2*multiplier
+        correct_price_ask = ask + 2*multiplier         
+
+        if action_postion == 'Buy':
+            risk_free_request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": symbol,    
+            "sl": correct_price_ask if is_profit else sl,  
+            "tp": tp if is_profit else correct_price_bid,
+            "position": trade.order, 
+            }
+
+        if action_postion == 'Sell':
+            risk_free_request = {
+                "action": mt5.TRADE_ACTION_SLTP,
+                "symbol": symbol,    
+                "sl": correct_price_bid if is_profit else sl,  
+                "tp": tp if is_profit else correct_price_ask,
+                "position": trade.order, 
+                }
+
+
+
+    elif action_postion == 'Buy':
         risk_free_request = {
         "action": mt5.TRADE_ACTION_SLTP,
         "symbol": symbol,    
@@ -378,7 +416,7 @@ def Control_Positions(initialize, positions):
         "position": trade.order, 
         }
 
-    if action_postion == 'Sell':
+    elif action_postion == 'Sell':
         risk_free_request = {
             "action": mt5.TRADE_ACTION_SLTP,
             "symbol": symbol,    
