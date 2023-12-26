@@ -64,22 +64,22 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
     
     except AttributeError as e:
         if str(e) == "'NoneType' object has no attribute 'time'":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return None, None
         if str(e) == "'NoneType' object has no attribute 'profit'":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return None, None
         if str(e) == "'NoneType' object has no attribute 'ask'":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return None, None
         if str(e) == "'NoneType' object has no attribute 'bid'":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return None, None
         else:
             raise
     except requests.exceptions.JSONDecodeError as e:
         if str(e) == "Expecting value: line 1 column 1 (char 0)":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return None, None
         else:
             raise
@@ -90,7 +90,7 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
         else:
             raise
     except requests.exceptions.ConnectionError as e:
-        log(f"An exception occurred:\n{traceback.format_exc()}")
+        #log(f"An exception occurred:\n{traceback.format_exc()}")
         return None, None
 
 
@@ -114,7 +114,7 @@ def is_market_open(initialize):
     
     except AttributeError as e:
         if str(e) == "'NoneType' object has no attribute 'time'":
-            log(f"An exception occurred:\n{traceback.format_exc()}")
+            #log(f"An exception occurred:\n{traceback.format_exc()}")
             return False
 
     # shut down the connection to the MetaTrader 5 terminal

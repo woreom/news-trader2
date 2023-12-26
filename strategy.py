@@ -38,20 +38,24 @@ def set_action(initialize: List, positions: List, position_index: int, symbol: s
     if (price_news_time < candle["Low"]):
         if positions[position_index]['Action'] == 'Sell':
             action = 'Sell'
+
     elif (price_news_time > candle["High"]):
         if positions[position_index]['Action'] == 'Buy':
             action = 'Buy'
 
+    log(f'action: {action} price_news_time: {price_news_time} candle_low: {candle["Low"]} candle_high: {candle["High"]}')
+
     # Find if the second position is a buy, sell or cancel  
     if action == "Cancel":
         sleep(positions[1-position_index]["PendingTime"] - positions[position_index]["PendingTime"])
+        log(f'The second sleep duraction for {positions[position_index]["Currency"]} was passed ({positions[1-position_index]["PendingTime"] - positions[position_index]["PendingTime"]} seconds) news:{positions[position_index]["News"]}')
         # update current candle
         candle = get_candle(initialize=initialize, symbol=symbol, timeframe='1m')
         if (price_news_time < candle["Low"]):
             action = 'Sell'
         elif (price_news_time > candle["High"]):
             action = 'Buy'
-    
+        log(f'action: {action} low: {candle["Low"]} high: {candle["High"]}')
     # Add Check if action contradicts our open positions
     open_positions = get_open_positions(initialize)
     num_buy = len(open_positions.loc[(open_positions['symbol'] == symbol) & (open_positions["action"] == "Buy")])
@@ -59,6 +63,7 @@ def set_action(initialize: List, positions: List, position_index: int, symbol: s
     
 
     if (action == "Buy" and num_sell > 0) or (action == "Sell" and num_buy > 0):
+        log(f'action: {action} num_sell: {num_sell} num_buy: {num_buy}')
         action = "Cancel"
 
     return action
@@ -186,7 +191,7 @@ def Open_Position(trade_info):
     order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL}
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
-    lot = np.double(position_info['PositionSize'])        
+    lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))        
     request = {
     "action": mt5.TRADE_ACTION_DEAL,
     "symbol": symbol,
@@ -300,17 +305,19 @@ def Control_Positions(initialize, positions):
     # get the price in time of news
     price_news_time = positions[position_index]['price_news_time']
     sleep(time_info)
-
+    log(f'The first sleep duration for {positions[position_index]["Currency"]} was passed ({time_info} seconds) news:{positions[position_index]["News"]}')
     # Wait until action is set to 'Buy', 'Sell' or 'Cancel'
     action = set_action(initialize, positions, position_index, symbol, price_news_time)
     
     # Set our trading info
     position_info = positions[1] if action == 'Sell' else positions[0]
     price = get_ask(initialize, symbol) if action == 'Sell' else get_bid(initialize, symbol)
+    log(f'price: {price}')
     
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
-    lot = np.double(position_info['PositionSize'])
+    
+    lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))
 
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
@@ -327,16 +334,17 @@ def Control_Positions(initialize, positions):
     # check if R/R is less than 0.2
     if np.abs((request["tp"] - request["price"]) / (request['sl'] - request['price'])) <=0.2:
         action = 'Cancel'
+        log(f'action canceled because R/R is less than 0.2')
 
     # Check if price_news_time has been hit more than space
     if action != 'Cancel':
         slept_time = (positions[position_index]['PendingTime'] if position_index == position_order[action] else positions[0]['PendingTime'] + positions[1]['PendingTime'])
-        num_candles = int(np.round(slept_time/60, decimals = 0))+10
-        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='1m')
+        num_candles = int(np.round(slept_time/60, decimals = 0)/5)
+        df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='5m')
         count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]])
         print(count)
         if position_info["Space"] < count:
-            log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count}")
+            log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count} slept_time:{slept_time} num_candles:{num_candles}")
             action = 'Cancel'
 
     # Check if action is 'Cancel'
@@ -351,23 +359,75 @@ def Control_Positions(initialize, positions):
 
     # wait to risk-free the position (close it)
     sleep(position_info['TimeFrame']*60*60 - slept_time)
-    
+
     # Find our profit or loss
     open_positions = get_open_positions(initialize)
     is_profit = open_positions.loc[open_positions['ticket'] == trade.order]['profit'].iloc[0] > 0
     ## If trader.order does not match any tickets IndexError: single positional indexer is out-of-bounds
+    #get action of the position
+    action_postion = open_positions.loc[open_positions['ticket'] == trade.order]['action'].iloc[0]
+    #get spread
+    symbol_postion = open_positions.loc[open_positions['ticket'] == trade.order]['symbol'].iloc[0]
 
+
+    __MULTIPLIER__VALUE__ = {
+    'AUDJPY': 0.001, 'AUDUSD': 1e-05, 'AUDCAD': 1e-05, 'AUDCHF': 1e-05, 'CADCHF': 1e-05,
+    'CADJPY': 0.001, 'CHFJPY': 0.001, 'GBPCHF': 1e-05, 'EURAUD': 1e-05, 'EURCAD': 1e-05,
+    'EURGBP': 1e-05, 'EURJPY': 0.001, 'EURNZD': 1e-05, 'EURUSD': 1e-05, 'EURCHF': 1e-05,
+    'GBPAUD': 1e-05, 'GBPJPY': 0.001, 'GBPUSD': 1e-05, 'GBPCAD': 1e-05, 'GBPNZD': 1e-05,
+    'NZDCAD': 1e-05, 'NZDCHF': 1e-05, 'NZDJPY': 0.001, 'NZDUSD': 1e-05, 'USDCAD': 1e-05,
+    'USDCHF': 1e-05, 'USDJPY': 0.001, 'XAUUSD': 0.01
+    }
+
+    ask = get_ask(initialize, symbol_postion)
+    bid = get_bid(initialize, symbol_postion)
+    spread = abs(ask - bid)
+    multiplier = __MULTIPLIER__VALUE__[symbol_postion]
     # Modify position to be risk-free
-    risk_free_request = {
+    if (bid < price+spread < ask) or (bid < price-spread < ask):
+        correct_price_bid = bid - 2*multiplier
+        correct_price_ask = ask + 2*multiplier         
+
+        if action_postion == 'Buy':
+            risk_free_request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": symbol,    
+            "sl": correct_price_ask if is_profit else sl,  
+            "tp": tp if is_profit else correct_price_bid,
+            "position": trade.order, 
+            }
+
+        if action_postion == 'Sell':
+            risk_free_request = {
+                "action": mt5.TRADE_ACTION_SLTP,
+                "symbol": symbol,    
+                "sl": correct_price_bid if is_profit else sl,  
+                "tp": tp if is_profit else correct_price_ask,
+                "position": trade.order, 
+                }
+
+
+
+    elif action_postion == 'Buy':
+        risk_free_request = {
         "action": mt5.TRADE_ACTION_SLTP,
         "symbol": symbol,    
-        "sl": price if is_profit else sl,  
-        "tp": tp if is_profit else price,
+        "sl": price+spread if is_profit else sl,  
+        "tp": tp if is_profit else price-spread,
         "position": trade.order, 
         }
+
+    elif action_postion == 'Sell':
+        risk_free_request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": symbol,    
+            "sl": price-spread if is_profit else sl,  
+            "tp": tp if is_profit else price+spread,
+            "position": trade.order, 
+            }
     
     # Send modification to MT5
     success, trade = modify_position(request= risk_free_request)
-    
+    log(f'{success}  {trade}')
     return trade, request
     
