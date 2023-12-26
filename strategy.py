@@ -186,7 +186,7 @@ def Open_Position(trade_info):
     order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL}
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
-    lot = np.double(position_info['PositionSize'])        
+    lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))        
     request = {
     "action": mt5.TRADE_ACTION_DEAL,
     "symbol": symbol,
@@ -310,7 +310,8 @@ def Control_Positions(initialize, positions):
     
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
-    lot = np.double(position_info['PositionSize'])
+    
+    lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))
 
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
