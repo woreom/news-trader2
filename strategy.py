@@ -317,6 +317,14 @@ def Control_Positions(initialize, positions):
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
     
+    sl_gap = np.abs(sl - price)
+    tp_gap = np.abs(tp - price)
+
+    if tp_gap / sl_gap > 1:
+        tp = price + sl_gap if action=="Buy" else price - sl_gap if action=="Sell" else tp
+    elif tp_gap / sl_gap < 1:
+        sl = price - tp_gap if action=="Buy" else price + tp_gap if action=="Sell" else sl
+
     lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))
 
     request = {
