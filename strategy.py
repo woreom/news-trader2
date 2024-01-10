@@ -8,6 +8,7 @@ import MetaTrader5 as mt5
 
 from utils import log, try_on_internet, log_it
 from get_data import get_candle, get_bid, get_ask, get_open_positions, get_data_from_mt5
+from news_trading import calc_position_size
 
 # symbol = "XAUUSD"
 # price = get_bid(initialize, symbol=symbol)
@@ -191,7 +192,7 @@ def Open_Position(trade_info):
     order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL}
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
-    lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))        
+    lot = np.double(position_info['PositionSize'])        
     request = {
     "action": mt5.TRADE_ACTION_DEAL,
     "symbol": symbol,
@@ -295,7 +296,7 @@ def Control_Positions(initialize, positions):
     # Set obvious arguments
     symbol=positions[0]['Currency']
     digit = mt5.symbol_info(symbol).digits
-    order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL}
+    order_type = {'Buy': mt5.ORDER_TYPE_BUY, 'Sell': mt5.ORDER_TYPE_SELL, 'Cancel': None}
     position_order = {'Buy': 0, 'Sell': 1}
 
 
@@ -313,9 +314,12 @@ def Control_Positions(initialize, positions):
     position_info = positions[1] if action == 'Sell' else positions[0]
     price = get_ask(initialize, symbol) if action == 'Sell' else get_bid(initialize, symbol)
     log(f'price: {price}')
+
     
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
+    lot = np.double(position_info['PositionSize'])
+    
     
     sl_gap = np.abs(sl - price)
     tp_gap = np.abs(tp - price)
@@ -325,7 +329,7 @@ def Control_Positions(initialize, positions):
     elif tp_gap / sl_gap < 1:
         sl = price - tp_gap if action=="Buy" else price + tp_gap if action=="Sell" else sl
 
-    lot = np.double(PositionSize(symbol, price, sl, position_info['Risk']))
+    lot = np.double(calc_position_size(symbol, price, sl, position_info['Risk']))
 
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
@@ -343,17 +347,18 @@ def Control_Positions(initialize, positions):
     if np.abs((request["tp"] - request["price"]) / (request['sl'] - request['price'])) <=0.2:
         action = 'Cancel'
         log(f'action canceled because R/R is less than 0.2')
-
+        
+    if lot > 7: action = 'Cancel'
     # Check if price_news_time has been hit more than space
     if action != 'Cancel':
-        slept_time = (positions[position_index]['PendingTime'] if position_index == position_order[action] else positions[0]['PendingTime'] + positions[1]['PendingTime'])
+        slept_time = (positions[position_index]['PendingTime'] if position_index == position_order[action] else positions[1-position_index]['PendingTime'])
         num_candles = int(np.round(slept_time/60, decimals = 0)/5)
         df = get_data_from_mt5(initialize=initialize, Ticker=symbol, TimeFrame='5m')
-        count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]])
-        print(count)
-        if position_info["Space"] < count:
-            log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count} slept_time:{slept_time} num_candles:{num_candles}")
-            action = 'Cancel'
+        # count = max([count_num_hits(price_news_time, df[column].iloc[-num_candles:]) for column in ['Open', 'High', 'Low', 'Close',]])
+        # print(count)
+        # if position_info["Space"] < count:
+        #     log(f"Position {position_info} was canceled becasue Space:{position_info['Space']} < Count:{count} slept_time:{slept_time} num_candles:{num_candles}")
+        #     action = 'Cancel'
 
     # Check if action is 'Cancel'
     if action == 'Cancel':
@@ -370,7 +375,8 @@ def Control_Positions(initialize, positions):
 
     # Find our profit or loss
     open_positions = get_open_positions(initialize)
-    is_profit = open_positions.loc[open_positions['ticket'] == trade.order]['profit'].iloc[0] > 0
+    if not open_positions.empty:
+        is_profit = open_positions.loc[open_positions['ticket'] == trade.order]['profit'].iloc[0] > 0
     ## If trader.order does not match any tickets IndexError: single positional indexer is out-of-bounds
     #get action of the position
     action_postion = open_positions.loc[open_positions['ticket'] == trade.order]['action'].iloc[0]

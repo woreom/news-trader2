@@ -12,15 +12,19 @@ from strategy import Control_Positions
 
 import MetaTrader5 as mt5
 
-from news_trading import trade_on_news, trade_i_positions_on_news
+from news_trading import trade_on_news, trade_i_positions_on_news, trade_positions_on_white_news
 from utils import log
 
-def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_positions=3):
+def news_trader(initialize, countries, symbol, timeframe, risk, timezone):
     try:
         news_time = False
         positions = ()
         now = pd.Timestamp('today', tzinfo=timezone).replace(tzinfo=None)
         df = get_today_calendar(countries=countries, timezone=timezone)
+        # white_news = pd.read_excel('static/white news.xlsx')
+        white_news = pd.read_csv('static/white_news.csv')
+        white_news_list = list(white_news['news'].unique())
+        df = df[df['News'].isin(white_news_list)]
         df_position, file_path = create_positions_file(timezone=timezone)
         # get df from now
         next_news = df[df["Date_Time"] > now].iloc[0]
@@ -37,9 +41,9 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone, num_po
             #                           country=next_news['Country'], news=next_news['News'],
             #                           symbol= symbol, timeframe=timeframe, risk=risk, time_open=now)
             
-            positions = trade_i_positions_on_news(initialize=initialize,
+            positions = trade_positions_on_white_news(initialize=initialize,
                                     country=next_news['Country'], news=next_news['News'],
-                                    num_positions= num_positions, risk=risk, time_open=now)
+                                    risk=risk, time_open=now, white_news=white_news)
             
             log(positions)
             # for position in positions:
@@ -120,13 +124,14 @@ def is_market_open(initialize):
     # shut down the connection to the MetaTrader 5 terminal
     # mt5.shutdown()
 
-def run_bot(all_countries=['United States'], symbol=None, timeframe=None, risk=100, num_positions=3):
+def run_bot(all_countries=['United States'], symbol=None, timeframe=None, risk=200):
     message = "Starting Bot ..."
     log(message)
     while True:
         try:
             #initialize= ["51810268", "apmjgjp1", "Alpari-MT5-Demo"]
             initialize= ["51834380", "4wsirwes", "Alpari-MT5-Demo"]
+            # initialize= ["51949125", "qtrvkk7i", "Alpari-MT5-Demo"]
 
             timezone = pytz.timezone('Asia/Tehran')
             market_status = is_market_open(initialize)
@@ -138,7 +143,7 @@ def run_bot(all_countries=['United States'], symbol=None, timeframe=None, risk=1
                         timeframe= timeframe,
                         risk= risk,
                         timezone= timezone,
-                        num_positions= num_positions)
+                )
                 # if positions != (): log(flag, positions)
                 if flag != None:    
                     log(f"News Time? {'Yes' if flag else 'No'}")
@@ -241,7 +246,7 @@ if __name__ == "__main__":
     run_bot(all_countries=['United States', 'United Kingdom', 'Euro Zone',
                            'Germany', 'Switzerland', 'Canada', 
                            'Australia', 'Japan', 'New Zealand', 'China'],
-                           symbol=None, timeframe=None, risk=100, num_positions=3)
+                           symbol=None, timeframe=None, risk=100)
 
     
 
