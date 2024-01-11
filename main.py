@@ -49,9 +49,32 @@ def news_trader(initialize, countries, symbol, timeframe, risk, timezone):
             # for position in positions:
             #     df_position = pd.concat([df_position, pd.DataFrame(position)], ignore_index=True)
             #     df_position.to_csv(file_path, index=False)
-            for position in positions:
-                t1 = threading.Thread(target=Control_Positions, args=(initialize,  position))
+
+            tracker_nod = {key:None for key in ['date_time', 'news', 'impact', 'actual', 'forecast', 'previous',
+                                                'country', 'symbol', 'timeframe', 'action' , 'volume', 'open_time',
+                                                'price', 'rr', 'risk', 'sl', 'tp', 'profit', 'ticket',
+                                                'close_time', 'risk-free_price', 'risk-free_sl', 'risk-free_tp',
+                                                'risk-free_profit', 'risk-free_close_time',]}
+
+            for i, position in enumerate(positions):
+
+                tracker = tracker_nod.copy()
+
+                tracker['date_time'] = now.strftime("%Y-%m-%d %H:%M:%S")
+                tracker['news'] = next_news['News']
+                tracker['impact'] = next_news["Impact"]
+                tracker['actual'] = next_news["Actual"]
+                tracker['forecast'] = next_news["Forecast"]
+                tracker['previous'] = next_news["Previous"]
+                tracker['country'] = next_news['Country']
+                tracker['risk'] = risk
+                tracker['symbol'] = position[0]['Currency']
+                tracker['timeframe'] = position[0]['TimeFrame']
+
+                t1 = threading.Thread(target=Control_Positions, args=(initialize,  position, tracker, timezone))
                 t1.start()
+            
+
            
                 
         # if it's news is published to 4hour return true
