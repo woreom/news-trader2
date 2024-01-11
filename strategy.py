@@ -403,63 +403,42 @@ def Control_Positions(initialize, positions, tracker, timezone):
                 f.write(f'{tracker}\n')
             return None, None
 
-
-    
-    #get action of the position
-    action_postion = open_positions.loc[open_positions['ticket'] == trade.order]['action'].iloc[0]
     #get spread
-    symbol_postion = open_positions.loc[open_positions['ticket'] == trade.order]['symbol'].iloc[0]
-
-    ask = get_ask(initialize, symbol_postion)
-    bid = get_bid(initialize, symbol_postion)
+    ask = get_ask(initialize, symbol)
+    bid = get_bid(initialize, symbol)
     spread = abs(ask - bid)
-    multiplier = get_tick_size(symbol_postion)
+    multiplier = get_tick_size(symbol)
     # Modify position to be risk-free
     if (bid < price+spread < ask) or (bid < price-spread < ask):
         correct_price_bid = np.round(bid - 2*multiplier, digit)
-        correct_price_ask = np.round(ask + 2*multiplier, digit)         
+        correct_price_ask = np.round(ask + 2*multiplier, digit)
+    else:
+        correct_price_bid =  np.round(price-spread, digit)
+        correct_price_ask = np.round(price+spread, digit)    
 
-        if action_postion == 'Buy':
-            risk_free_request = {
-            "action": mt5.TRADE_ACTION_SLTP,
-            "symbol": symbol,    
-            "sl": correct_price_ask if is_profit else sl,  
-            "tp": tp if is_profit else correct_price_bid,
-            "position": trade.order, 
-            }
-
-        if action_postion == 'Sell':
-            risk_free_request = {
-                "action": mt5.TRADE_ACTION_SLTP,
-                "symbol": symbol,    
-                "sl": correct_price_bid if is_profit else sl,  
-                "tp": tp if is_profit else correct_price_ask,
-                "position": trade.order, 
-                }
-
-    elif action_postion == 'Buy':
+    if action == 'Buy':
         risk_free_request = {
         "action": mt5.TRADE_ACTION_SLTP,
         "symbol": symbol,    
-        "sl": np.round(price+spread, digit)if is_profit else sl,  
-        "tp": tp if is_profit else np.round(price-spread, digit),
+        "sl": correct_price_ask if is_profit else sl,  
+        "tp": tp if is_profit else correct_price_bid,
         "position": trade.order, 
         }
 
-    elif action_postion == 'Sell':
+    if action == 'Sell':
         risk_free_request = {
             "action": mt5.TRADE_ACTION_SLTP,
             "symbol": symbol,    
-            "sl": np.round(price-spread, digit) if is_profit else sl,  
-            "tp": tp if is_profit else np.round(price+spread, digit),
+            "sl": correct_price_bid if is_profit else sl,  
+            "tp": tp if is_profit else correct_price_ask,
             "position": trade.order, 
             }
-    
+
     # Send modification to MT5
     now = pd.Timestamp('today', tzinfo=timezone).replace(tzinfo=None)
     tracker['close_time'] = now.strftime("%Y-%m-%d %H:%M:%S")
     tracker['profit'] = open_positions.loc[open_positions['ticket'] == trade.order]['profit'].iloc[0]
-    tracker['risk-free_price'] = ask if action_postion == 'Buy' else bid
+    tracker['risk-free_price'] = ask if action == 'Buy' else bid
     tracker['risk-free_sl'] = risk_free_request['sl']
     tracker['risk-free_tp'] = risk_free_request['tp']
     tracker['risk-free_profit'] = None
