@@ -310,16 +310,27 @@ def Control_Positions(initialize, positions, tracker, timezone):
     log(f'The first sleep duration for {positions[position_index]["Currency"]} was passed ({time_info} seconds) news:{positions[position_index]["News"]}')
     # Wait until action is set to 'Buy', 'Sell' or 'Cancel'
     action = set_action(initialize, positions, position_index, symbol, price_news_time)
-    
+    price = get_ask(initialize, symbol) if action == 'Sell' else get_bid(initialize, symbol)
+    ask = get_ask(initialize, symbol)
+    bid = get_bid(initialize, symbol)
+    spread = abs(ask - bid)
+    multiplier = get_tick_size(symbol)
+    # Modify position to be risk-free
+    if (bid < price+spread < ask) or (bid < price-spread < ask):
+        correct_price_bid = np.round(bid - 2*multiplier, digit)
+        correct_price_ask = np.round(ask + 2*multiplier, digit)
+    else:
+        correct_price_bid =  np.round(price-spread, digit)
+        correct_price_ask = np.round(price+spread, digit)   
     # Set our trading info
     position_info = positions[1] if action == 'Sell' else positions[0]
-    price = get_ask(initialize, symbol) if action == 'Sell' else get_bid(initialize, symbol)
+    price = correct_price_ask if action == 'Sell' else correct_price_bid
     log(f'price: {price}')
 
     
     tp = np.round(position_info['TakeProfit'], digit)
     sl = np.round(position_info['StepLoss'], digit)
-    lot = np.double(position_info['PositionSize'])
+    #lot = np.double(position_info['PositionSize'])
     
     
     sl_gap = np.abs(sl - price)
