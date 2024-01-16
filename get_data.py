@@ -303,7 +303,7 @@ def fix_dataframe(tf:pd.DataFrame):
     
     df["News"] = clean_news(df)
     df["Country"] = [c.title() for c in df["Country"]]
-    df = df[["Date_Time", 'News', 'Country', 'Actual', 'Forecast', "Previous"]]
+    df = df[["Date_Time", 'News', 'Country', 'Impact', 'Actual', 'Forecast', "Previous"]]
     
     return df
 
