@@ -335,11 +335,27 @@ def Control_Positions(initialize, positions, tracker, timezone):
     
     sl_gap = np.abs(sl - price)
     tp_gap = np.abs(tp - price)
+    final_ratio = 1.15
 
     if tp_gap / sl_gap > 1:
-        tp = np.round(price + sl_gap, digit) if action=="Buy" else price - sl_gap if action=="Sell" else tp
+        tp = np.round(price + sl_gap, digit) if action == "Buy" else np.round(price - sl_gap, digit) if action == "Sell" else tp
     elif tp_gap / sl_gap < 1:
-        sl = np.round(price - tp_gap, digit) if action=="Buy" else price + tp_gap if action=="Sell" else sl
+        sl = np.round(price - tp_gap, digit) if action == "Buy" else np.round(price + tp_gap, digit) if action == "Sell" else sl
+
+    dif_sl = np.abs(price - sl)
+    dif_tp = np.abs(price - tp)
+    x_value = dif_sl - (dif_tp / final_ratio)
+    sl = np.round(sl + x_value, digit) if action == "Buy" else np.round(sl - x_value, digit) if action == "Sell" else sl
+
+
+    
+
+
+    # if tp_gap / sl_gap > ratio:
+    #     tp = np.round(price + sl_gap * ratio, digit) if action == "Buy" else np.round(price - sl_gap * ratio, digit) if action == "Sell" else tp
+    # elif tp_gap / sl_gap < ratio:
+    #     sl = np.round(price - tp_gap / ratio, digit) if action == "Buy" else np.round(price + tp_gap / ratio, digit) if action == "Sell" else sl
+
 
     lot = np.double(calc_position_size(symbol, price, sl, position_info['Risk']))
 
@@ -431,8 +447,8 @@ def Control_Positions(initialize, positions, tracker, timezone):
         risk_free_request = {
         "action": mt5.TRADE_ACTION_SLTP,
         "symbol": symbol,    
-        "sl": correct_price_ask if is_profit else sl,  
-        "tp": tp if is_profit else correct_price_bid,
+        "sl": price if is_profit else sl,  
+        "tp": tp if is_profit else price,
         "position": trade.order, 
         }
 
@@ -440,8 +456,8 @@ def Control_Positions(initialize, positions, tracker, timezone):
         risk_free_request = {
             "action": mt5.TRADE_ACTION_SLTP,
             "symbol": symbol,    
-            "sl": correct_price_bid if is_profit else sl,  
-            "tp": tp if is_profit else correct_price_ask,
+            "sl": price if is_profit else sl,  
+            "tp": tp if is_profit else price,
             "position": trade.order, 
             }
 
