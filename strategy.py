@@ -358,6 +358,8 @@ def Control_Positions(initialize, positions, tracker, timezone):
 
 
     lot = np.double(calc_position_size(symbol, price, sl, position_info['Risk']))
+    if symbol == "GBPJPY":
+        lot = np.double(lot/2)
 
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
