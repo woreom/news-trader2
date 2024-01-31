@@ -342,10 +342,10 @@ def Control_Positions(initialize, positions, tracker, timezone):
     elif tp_gap / sl_gap < 1:
         sl = np.round(price - tp_gap, digit) if action == "Buy" else np.round(price + tp_gap, digit) if action == "Sell" else sl
 
-    dif_sl = np.abs(price - sl)
+    # dif_sl = np.abs(price - sl)
     dif_tp = np.abs(price - tp)
-    x_value = dif_sl - (dif_tp / final_ratio)
-    sl = np.round(sl + x_value, digit) if action == "Buy" else np.round(sl - x_value, digit) if action == "Sell" else sl
+    dif_sl = (dif_tp / final_ratio)
+    sl = np.round(price - dif_sl, digit) if action == "Buy" else np.round(price + dif_sl, digit) if action == "Sell" else sl
 
 
     
